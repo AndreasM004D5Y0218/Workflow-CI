@@ -7,8 +7,8 @@ import os
 
 # 1. Load Data
 # Mengarah ke folder yang barusan kamu buat
-train_df = pd.read_csv('Membangun_model/heart_disease_uci_preprocessing/train_data.csv')
-test_df = pd.read_csv('Membangun_model/heart_disease_uci_preprocessing/test_data.csv')
+train_df = pd.read_csv('heart_disease_uci_preprocessing/train_data.csv')
+test_df = pd.read_csv('heart_disease_uci_preprocessing/test_data.csv')
 
 # 2. Pisahkan Fitur dan Target
 # Di Heart Disease UCI, targetnya adalah kolom 'num' (0=sehat, 1-4=sakit)
