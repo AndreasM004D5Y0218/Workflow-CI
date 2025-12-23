@@ -67,20 +67,22 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 4) BUILD & PUSH DOCKER IMAGE VIA MLFLOW (ADVANCE)
+     # 4) BUILD & PUSH DOCKER IMAGE VIA MLFLOW (ADVANCE)
       - name: Build and Push Docker Image
         run: |
           cd ..
 
+          # Cari path model
           MODEL_DIR=$(ls -td MLProject/mlruns/*/*/artifacts/model 2>/dev/null | head -n 1)
           if [ -z "$MODEL_DIR" ]; then
-            echo "[ERROR] MODEL_DIR tidak ditemukan"
+            echo "[ERROR] MODEL_DIR tidak ditemukan di MLProject/mlruns."
             exit 1
           fi
 
-          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest"
+          IMAGE="${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest"
+          
           echo "Building image: $IMAGE"
-          mlflow models build-docker -m "$MODEL_DIR" -n "$IMAGE"
+          mlflow models build-docker -m "$MODEL_DIR" -n "$IMAGE" --enable-mlserver
 
           echo "Pushing image: $IMAGE"
           docker push "$IMAGE"
