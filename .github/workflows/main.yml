@@ -82,7 +82,7 @@ jobs:
           IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/submission-mlops:latest"
           
           echo "Building image: $IMAGE"
-          mlflow models build-docker -m "$MODEL_DIR" -n "$IMAGE" --enable-mlserver
+          mlflow models build-docker -m "$MODEL_DIR" -n "$IMAGE"
 
           echo "Pushing image: $IMAGE"
           docker push "$IMAGE"
