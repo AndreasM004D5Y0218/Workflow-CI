@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
 
-          IMAGE="${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest"
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/submission-mlops:latest"
           
           echo "Building image: $IMAGE"
           mlflow models build-docker -m "$MODEL_DIR" -n "$IMAGE" --enable-mlserver
