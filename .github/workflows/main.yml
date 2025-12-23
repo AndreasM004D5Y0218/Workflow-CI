@@ -1,0 +1,80 @@
+name: CI/CD Pipeline Heart Disease (MLflow Project)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./MLProject
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies (for env-manager=local)
+        run: |
+          python -m pip install --upgrade pip
+          pip install mlflow==2.19.0 pandas numpy scikit-learn joblib
+
+      # 1) TRAINING VIA MLFLOW PROJECT (WAJIB UNTUK RUBRIK)
+      - name: Run MLflow Project (re-train)
+        run: |
+          mlflow run . --env-manager=local
+
+      - name: Show outputs
+        run: |
+          echo "=== MLProject dir ==="
+          ls -la
+          echo "=== artifacts (optional) ==="
+          ls -la artifacts || true
+
+      # 2) UPLOAD ARTIFACTS (SKILLED)
+      - name: Upload training artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: heart-disease-mlflow-artifacts
+          path: |
+            mlruns
+            MLProject/artifacts
+
+      # 3) DOCKER LOGIN (ADVANCE)
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 4) BUILD & PUSH DOCKER IMAGE VIA MLFLOW (ADVANCE)
+      - name: Build and Push Docker Image
+        run: |
+          cd ..  # keluar ke root repo supaya akses mlruns jelas
+
+          # cari model MLflow terbaru (artifact_path="model" -> .../artifacts/model)
+          MODEL_DIR=$(ls -td mlruns/*/*/artifacts/model 2>/dev/null | head -n 1)
+          if [ -z "$MODEL_DIR" ]; then
+            echo "[ERROR] MODEL_DIR tidak ditemukan. Pastikan modelling.py melakukan mlflow.sklearn.log_model(..., artifact_path='model')"
+            exit 1
+          fi
+
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest"
+          echo "Building image: $IMAGE"
+          mlflow models build-docker -m "$MODEL_DIR" -n "$IMAGE"
+
+          echo "Pushing image: $IMAGE"
+          docker push "$IMAGE"
